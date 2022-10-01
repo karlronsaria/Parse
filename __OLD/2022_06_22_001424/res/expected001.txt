@@ -1,0 +1,172 @@
+Start Json
+(
+  New Object
+  (
+    New Pair
+    (
+      Key: [link]
+      Value:
+      (
+        New Object
+        (
+          New Pair
+          (
+            Key: [url]
+            Value:
+            (
+              String: [https://json.org/example.html]
+            )
+          )
+          New Pair
+          (
+            Key: [retrieved]
+            Value:
+            (
+              String: [2022_06_19]
+            )
+          )
+        )
+      )
+    )
+    New Pair
+    (
+      Key: [glossary]
+      Value:
+      (
+        New Object
+        (
+          New Pair
+          (
+            Key: [title]
+            Value:
+            (
+              String: [example glossary]
+            )
+          )
+          New Pair
+          (
+            Key: [GlossDiv]
+            Value:
+            (
+              New Object
+              (
+                New Pair
+                (
+                  Key: [title]
+                  Value:
+                  (
+                    String: [S]
+                  )
+                )
+                New Pair
+                (
+                  Key: [GlossList]
+                  Value:
+                  (
+                    New Object
+                    (
+                      New Pair
+                      (
+                        Key: [GlossEntry]
+                        Value:
+                        (
+                          New Object
+                          (
+                            New Pair
+                            (
+                              Key: [ID]
+                              Value:
+                              (
+                                String: [SGML]
+                              )
+                            )
+                            New Pair
+                            (
+                              Key: [SortAs]
+                              Value:
+                              (
+                                String: [SGML]
+                              )
+                            )
+                            New Pair
+                            (
+                              Key: [GlossTerm]
+                              Value:
+                              (
+                                String: [Standard Generalized Markup Language]
+                              )
+                            )
+                            New Pair
+                            (
+                              Key: [Acronym]
+                              Value:
+                              (
+                                String: [SGML]
+                              )
+                            )
+                            New Pair
+                            (
+                              Key: [Abbrev]
+                              Value:
+                              (
+                                String: [ISO 8879:1986]
+                              )
+                            )
+                            New Pair
+                            (
+                              Key: [GlossDef]
+                              Value:
+                              (
+                                New Object
+                                (
+                                  New Pair
+                                  (
+                                    Key: [para]
+                                    Value:
+                                    (
+                                      String: [A meta-markup language, used to create markup languages such as DocBook.]
+                                    )
+                                  )
+                                  New Pair
+                                  (
+                                    Key: [GlossSeeAlso]
+                                    Value:
+                                    (
+                                      New List
+                                      (
+                                        Value:
+                                        (
+                                          String: [GML]
+                                        )
+                                        Value:
+                                        (
+                                          String: [XML]
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                            New Pair
+                            (
+                              Key: [GlossSee]
+                              Value:
+                              (
+                                String: [markup]
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)

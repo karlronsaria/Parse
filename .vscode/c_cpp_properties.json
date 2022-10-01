@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/tools/msys64/mingw64/include",
+                "C:/tools/msys64/mingw64/include/c++",
+                "C:/tools/msys64/mingw64/include/c++/12.1.0",
+                "C:/tools/msys64/mingw64/include/c++/12.1.0/x86_64-w64-mingw32",
+                "C:/tools/msys64/mingw64/include/*"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "${default}",
+            "compilerPath": "C:\\tools\\msys64\\mingw64\\bin\\g++.exe",
+            "compilerArgs": []
+        }
+    ],
+    "version": 4
+}

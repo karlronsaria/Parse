@@ -1,0 +1,32 @@
+{
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "iostream": "cpp",
+        "*.tcc": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "numeric": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "tuple": "cpp",
+        "stdexcept": "cpp",
+        "array": "cpp",
+        "memory_resource": "cpp",
+        "initializer_list": "cpp",
+        "limits": "cpp",
+        "concepts": "cpp",
+        "iterator": "cpp",
+        "bitset": "cpp",
+        "compare": "cpp",
+        "random": "cpp",
+        "new": "cpp",
+        "cmath": "cpp",
+        "type_traits": "cpp",
+        "memory": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "utility": "cpp",
+        "bit": "cpp"
+    }
+}
