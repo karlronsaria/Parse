@@ -16,7 +16,7 @@
                 "_UNICODE"
             ],
             "cStandard": "c17",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "${default}",
             "compilerPath": "C:\\tools\\msys64\\mingw64\\bin\\g++.exe",
             "compilerArgs": []

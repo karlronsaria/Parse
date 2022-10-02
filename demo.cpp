@@ -16,6 +16,29 @@ public:
 
 std::string Tests::WorkingDirectory;
 
+#ifdef __DIVIDEND__
+#undef __DIVIDEND__
+#endif
+
+#if __cplusplus >= 202002L
+
+template <typename T>
+concept StringDivisible = requires (
+    T d, bool b, char c, std::string s1, const char * s2
+) {
+    d.Success();
+    d.Copy(b);
+    d.operator!();
+    d.operator/(c);
+    d.operator/(s1);
+    d.operator/(s2);
+};
+
+#define __DIVIDEND__ StringDivisible
+#else
+#define __DIVIDEND__ typename
+#endif
+
 // #define RUN_TESTS
 
 struct Triple {
@@ -23,12 +46,8 @@ struct Triple {
     std::string quotient;
     std::string remainder;
 
-    const Triple operator!() const {
-        return Triple {
-            .success = !success,
-            .quotient = quotient,
-            .remainder = remainder,
-        };
+    bool Success() const {
+        return success;
     }
 
     const Triple Copy(bool decision) const {
@@ -39,16 +58,20 @@ struct Triple {
         };
     }
 
-    bool Success() const {
-        return success;
+    const Triple operator!() const {
+        return Triple {
+            .success = !success,
+            .quotient = quotient,
+            .remainder = remainder,
+        };
     }
 
-    const Triple By(char c) const {
-        return remainder.length() == 0 || remainder[0] != c
+    const Triple By(char divisor) const {
+        return remainder.length() == 0 || remainder[0] != divisor
             ? Copy(false)
             : Triple {
                 .success = true,
-                .quotient = std::string(quotient) + c,
+                .quotient = std::string(quotient) + divisor,
                 .remainder = remainder.substr(
                     1,
                     remainder.length() - 1
@@ -56,31 +79,29 @@ struct Triple {
             };
     }
 
-    const Triple By(std::string needle) const {
-        auto haystack = remainder;
+    const Triple By(std::string divisor) const {
+        auto dividend = remainder;
 
-        if (haystack.length() < needle.length())
+        bool fail = (dividend.length() < divisor.length())
+            || (dividend.substr(0, divisor.length()) != divisor);
+
+        if (fail)
             return !*this;
 
-        auto rem = haystack.substr(0, needle.length());
-
-        if (rem != needle)
-            return !*this;
-
-        auto remainder = haystack.substr(
-            needle.length(),
-            haystack.length() - needle.length()
+        auto remainder = dividend.substr(
+            divisor.length(),
+            dividend.length() - divisor.length()
         );
 
         return Triple {
             .success = true,
-            .quotient = std::string(quotient) + std::string(needle),
+            .quotient = std::string(quotient) + std::string(divisor),
             .remainder = remainder,
         };
     }
 
-    const Triple By(const char * needle) const {
-        return By(std::string(needle));
+    const Triple By(const char * divisor) const {
+        return By(std::string(divisor));
     }
 
     const Triple operator/(char divisor) const { return By(divisor); }
@@ -88,12 +109,12 @@ struct Triple {
     const Triple operator/(const char * divisor) const { return By(divisor); }
 };
 
-typedef std::function<Triple(Triple)> functor_t;
-
+template <__DIVIDEND__ T>
 class AParser;
 
-typedef std::shared_ptr<AParser> parser_t;
+// typedef std::shared_ptr<AParser> parser_t;
 
+/*
 template <class T, class... Args>
 parser_t ptr(Args &&... args) {
     return std::make_shared<T>(args...);
@@ -103,8 +124,12 @@ template <class T>
 parser_t ptr() {
     return std::make_shared<T>();
 }
+*/
 
+template <__DIVIDEND__ T>
 class AParser {
+public:
+    typedef std::function<T(T)> functor_t;
 private:
     functor_t _action;
 public:
@@ -114,18 +139,19 @@ public:
     AParser(functor_t action):
         _action(action) {}
 
-    virtual functor_t Get() const {
+    virtual functor_t
+    Get() const {
         return _action;
     }
 
-    const parser_t
-    And(parser_t other) const {
+    const std::shared_ptr<AParser<T>>
+    And(std::shared_ptr<AParser<T>> other) const {
         auto first = this->Get();
         auto secnd = other->Get();
 
-        return ptr<AParser>(
-            [=](Triple result_0) -> Triple {
-                Triple result_1 = first(result_0);
+        return std::make_shared<AParser<T>>(
+            [=](T result_0) -> T {
+                T result_1 = first(result_0);
 
                 return !result_1.success
                     ? result_1
@@ -135,14 +161,14 @@ public:
         );
     }
 
-    const parser_t
-    Or(parser_t other) const {
+    const std::shared_ptr<AParser<T>>
+    Or(std::shared_ptr<AParser<T>> other) const {
         auto first = this->Get();
         auto secnd = other->Get();
 
-        return ptr<AParser>(
-            [=](Triple result_0) -> Triple {
-                Triple result_1 = first(result_0);
+        return std::make_shared<AParser<T>>(
+            [=](T result_0) -> T {
+                T result_1 = first(result_0);
 
                 return result_1.success
                     ? result_1
@@ -153,63 +179,94 @@ public:
     }
 };
 
-class Parse: public AParser {
+template <__DIVIDEND__ T>
+class Parse: public AParser<T> {
 private:
-    functor_t _action;
+    typename AParser<T>::functor_t _action;
 public:
     virtual ~Parse() = default;
 
-    static parser_t New(functor_t action) { return ::ptr<Parse>(action); }
-    static parser_t New(char c) { return ::ptr<Parse>(c); }
-    static parser_t New(bool decision) { return ::ptr<Parse>(decision); }
-    static parser_t New(std::string str) { return ::ptr<Parse>(str); }
+    static std::shared_ptr<AParser<T>>
+    New(typename AParser<T>::functor_t action) {
+        return std::make_shared<Parse<T>>(action);
+    }
 
-    Parse(functor_t action):
+    static std::shared_ptr<AParser<T>>
+    New(char c) {
+        return std::make_shared<Parse<T>>(c);
+    }
+
+    static std::shared_ptr<AParser<T>>
+    New(bool decision) {
+        return std::make_shared<Parse<T>>(decision);
+    }
+
+    static std::shared_ptr<AParser<T>>
+    New(std::string str) {
+        return std::make_shared<Parse<T>>(str);
+    }
+
+    Parse(typename AParser<T>::functor_t action):
         _action(action) {}
 
-    Parse(const char * needle):
-        _action([needle](Triple result) -> Triple {
-            return result / needle;
+    Parse(const char * divisor):
+        _action([divisor](T dividend) -> T {
+            return dividend / divisor;
         }) {}
 
-    Parse(std::string needle):
-        _action([needle](Triple result) -> Triple {
-            return result / needle;
+    Parse(std::string divisor):
+        _action([divisor](T dividend) -> T {
+            return dividend / divisor;
         }) {}
 
-    Parse(std::function<bool(char)> condition, char c):
-        _action([condition, c](Triple result) -> Triple {
-            return condition(c)
-                ? result.Copy(false)
-                : result / c;
+    Parse(std::function<bool(char)> condition, char divisor):
+        _action([condition, divisor](T dividend) -> T {
+            return condition(divisor)
+                ? dividend.Copy(false)
+                : dividend / divisor;
         }) {}
 
-    Parse(char c):
-        _action([c](Triple result) -> Triple {
-            return result / c;
+    Parse(char divisor):
+        _action([divisor](T dividend) -> T {
+            return dividend / divisor;
         }) {}
 
     Parse(bool decision):
-        _action([decision](Triple result) -> Triple {
+        _action([decision](T result) -> T {
             return result.Copy(decision);
         }) {}
 
-    virtual functor_t
+    virtual typename AParser<T>::functor_t
     Get() const override {
         return _action;
     }
 };
 
-const parser_t operator*(const parser_t first, const parser_t secnd) {
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParser<T>>
+operator*(
+    const std::shared_ptr<AParser<T>> first,
+    const std::shared_ptr<AParser<T>> secnd
+) {
     return first->And(secnd);
 }
 
-const parser_t operator+(const parser_t first, const parser_t secnd) {
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParser<T>>
+operator+(
+    const std::shared_ptr<AParser<T>> first,
+    const std::shared_ptr<AParser<T>> secnd
+) {
     return first->Or(secnd);
 }
 
-const parser_t operator*(const int scalar, const parser_t vector) {
-    parser_t temp = Parse::New(true);
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParser<T>>
+operator*(
+    const int scalar,
+    const std::shared_ptr<AParser<T>> vector
+) {
+    auto temp = Parse<T>::New(true);
 
     for (int i = 1; i <= scalar; ++i)
         temp = temp->Or(vector);
@@ -217,8 +274,13 @@ const parser_t operator*(const int scalar, const parser_t vector) {
     return temp;
 }
 
-const parser_t Pow(const parser_t vector, const int scalar) {
-    parser_t temp = Parse::New(true);
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParser<T>>
+Pow(
+    const std::shared_ptr<AParser<T>> vector,
+    const int scalar
+) {
+    auto temp = Parse<T>::New(true);
 
     for (int i = 1; i <= scalar; ++i)
         temp = temp->And(vector);
@@ -229,14 +291,18 @@ const parser_t Pow(const parser_t vector, const int scalar) {
 // Seq ::= x Seq | nil
 // parse_seq = (x * parse_seq) + parse_true
 
-const parser_t While(const parser_t vector) {
-    return Parse::New(functor_t(
-        [vector](Triple init) {
-            Triple next = vector->Get()(init);
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParser<T>>
+While(
+    const std::shared_ptr<AParser<T>> vector
+) {
+    return Parse<T>::New(typename AParser<T>::functor_t(
+        [vector](T init) {
+            T next = vector->Get()(init);
 
-            parser_t nextParse = next.success
+            auto nextParse = next.success
                 ? While(vector)
-                : Parse::New(true)
+                : Parse<T>::New(true)
                 ;
 
             return nextParse->Get()(next);
@@ -244,15 +310,19 @@ const parser_t While(const parser_t vector) {
     ));
 }
 
-class ParseEmpty: public AParser {
+template <__DIVIDEND__ T>
+class ParseEmpty: public AParser<T> {
 public:
     virtual ~ParseEmpty() = default;
 
-    static parser_t New() { return ::ptr<ParseEmpty>(); }
+    static std::shared_ptr<AParser<T>>
+    New() {
+        return std::make_shared<ParseEmpty<T>>();
+    }
 
-    virtual functor_t
+    virtual typename AParser<T>::functor_t
     Get() const override {
-        return [](Triple result) -> Triple {
+        return [](T result) -> T {
             return result.Copy(result.remainder.length() == 0);
         };
     }
@@ -281,14 +351,19 @@ int main(int argc, char ** args) {
             .remainder = "what",
         };
 
-        auto parse_w = Parse::New('w');
-        auto parse_h = Parse::New('h');
-        auto parse_a = Parse::New('a');
-        auto parse_t = Parse::New('t');
-        auto parse_empty = ParseEmpty::New();
+        auto parse_w = Parse<Triple>::New('w');
+        auto parse_h = Parse<Triple>::New('h');
+        auto parse_a = Parse<Triple>::New('a');
+        auto parse_t = Parse<Triple>::New('t');
+        auto parse_empty = ParseEmpty<Triple>::New();
 
         auto parse_what =
-            parse_w->And(parse_h)->And(parse_a)->And(parse_t)->And(parse_empty);
+            parse_w
+            ->And(parse_h)
+            ->And(parse_a)
+            ->And(parse_t)
+            ->And(parse_empty)
+            ;
 
         auto final = parse_what->Get()(res);
 
@@ -299,18 +374,21 @@ int main(int argc, char ** args) {
                 ;
 
         auto parse_hello =
-            Parse::New('h') * Parse::New('e') * (Pow(Parse::New('l'), 2)) * Parse::New('o')
+            Parse<Triple>::New('h')
+          * Parse<Triple>::New('e')
+          * (Pow(Parse<Triple>::New('l'), 2))
+          * Parse<Triple>::New('o')
             ;
 
         auto parse_world =
-            Parse::New(std::string("world"))
+            Parse<Triple>::New(std::string("world"))
             ;
 
         final = (
-              parse_hello
-            * Parse::New(' ')
-            * parse_world
-            * ParseEmpty::New()
+            parse_hello
+          * Parse<Triple>::New(' ')
+          * parse_world
+          * ParseEmpty<Triple>::New()
         )->Get()(
             Triple {
                 .quotient = "",
@@ -326,7 +404,7 @@ int main(int argc, char ** args) {
             << "Remainder : " << final.remainder << '\n'
             ;
 
-        auto parse_while_x = While(Parse::New('x'));
+        auto parse_while_x = While(Parse<Triple>::New('x'));
 
         final = parse_while_x->Get()(
             Triple {
