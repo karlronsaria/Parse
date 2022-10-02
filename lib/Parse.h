@@ -14,10 +14,12 @@
 
 template <typename T>
 concept StringDivisible = requires (
-    T d, bool b, char c, std::string s1, const char * s2
+    T d, bool b, char c, std::string s1, const char * s2,
+    std::function<bool(char)> f
 ) {
     d.Success();
     d.Copy(b);
+    d.Diff(f);
     d.operator!();
     d.operator/(c);
     d.operator/(s1);
@@ -80,6 +82,22 @@ public:
             }
         );
     }
+
+    const std::shared_ptr<AParse<T>>
+    Not() const {
+        auto first = this->Get();
+
+        return std::make_shared<AParse<T>>(
+            [=](T result_0) -> T {
+                return !first(result_0);
+            }
+        );
+    }
+
+    const std::shared_ptr<AParse<T>>
+    operator-() const {
+        return Not();
+    }
 };
 
 template <__DIVIDEND__ T>
@@ -109,6 +127,11 @@ public:
         return std::make_shared<Parse<T>>(str);
     }
 
+    static std::shared_ptr<AParse<T>>
+    New(std::function<bool(char)> condition) {
+        return std::make_shared<Parse<T>>(condition);
+    }
+
     Parse(typename AParse<T>::functor_t action):
         _action(action) {}
 
@@ -122,11 +145,9 @@ public:
             return dividend / divisor;
         }) {}
 
-    Parse(std::function<bool(char)> condition, char divisor):
-        _action([condition, divisor](T dividend) -> T {
-            return condition(divisor)
-                ? dividend.Copy(false)
-                : dividend / divisor;
+    Parse(std::function<bool(char)> condition):
+        _action([condition](T dividend) -> T {
+            return dividend.Diff(condition);
         }) {}
 
     Parse(char divisor):
@@ -165,6 +186,15 @@ operator+(
 
 template <__DIVIDEND__ T>
 const std::shared_ptr<AParse<T>>
+operator-(
+    const std::shared_ptr<AParse<T>> first,
+    const std::shared_ptr<AParse<T>> secnd
+) {
+    return first->Or(secnd->Not());
+}
+
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParse<T>>
 operator*(
     const int scalar,
     const std::shared_ptr<AParse<T>> vector
@@ -189,6 +219,21 @@ Pow(
         temp = temp->And(vector);
 
     return temp;
+}
+
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParse<T>>
+operator-(const std::shared_ptr<AParse<T>> vector) {
+    return vector->Not();
+}
+
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParse<T>>
+Xor(
+    const std::shared_ptr<AParse<T>> a,
+    const std::shared_ptr<AParse<T>> b
+) {
+    return -(-a - b);
 }
 
 // Seq ::= x Seq | nil

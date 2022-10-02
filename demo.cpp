@@ -41,6 +41,19 @@ struct Triple {
         };
     }
 
+    const Triple Diff(std::function<bool(char)> condition) const {
+        return remainder.length() == 0 || !condition(remainder[0])
+            ? Copy(false)
+            : Triple {
+                .success = true,
+                .quotient = std::string(quotient) + remainder[0],
+                .remainder = remainder.substr(
+                    1,
+                    remainder.length() - 1
+                ),
+            };
+    }
+
     const Triple By(char divisor) const {
         return remainder.length() == 0 || remainder[0] != divisor
             ? Copy(false)
@@ -84,19 +97,22 @@ struct Triple {
     const Triple operator/(const char * divisor) const { return By(divisor); }
 };
 
-// typedef std::shared_ptr<AParser> parser_t;
+void PrintTest(std::shared_ptr<AParse<Triple>> p, const std::string & dividend) {
+    auto final = p->Get()(
+        Triple {
+            .quotient = "",
+            .remainder = dividend,
+        }
+    );
 
-/*
-template <class T, class... Args>
-parser_t ptr(Args &&... args) {
-    return std::make_shared<T>(args...);
-}
+    if (!final.success)
+        std::cout << "Fail:\n";
 
-template <class T>
-parser_t ptr() {
-    return std::make_shared<T>();
+    std::cout
+        << "Quotient  : " << final.quotient << '\n'
+        << "Remainder : " << final.remainder << "\n\n"
+        ;
 }
-*/
 
 int main(int argc, char ** args) {
     if (argc <= 1) {
@@ -115,12 +131,6 @@ int main(int argc, char ** args) {
     }
     #else
     {
-        auto res = Triple {
-            .success = true,
-            .quotient = "",
-            .remainder = "what",
-        };
-
         auto parse_w = Parse<Triple>::New('w');
         auto parse_h = Parse<Triple>::New('h');
         auto parse_a = Parse<Triple>::New('a');
@@ -135,13 +145,7 @@ int main(int argc, char ** args) {
             ->And(parse_empty)
             ;
 
-        auto final = parse_what->Get()(res);
-
-        if (final.success)
-            std::cout
-                << "Quotient  : " << final.quotient << '\n'
-                << "Remainder : " << final.remainder << '\n'
-                ;
+        PrintTest(parse_what, "what");
 
         auto parse_hello =
             Parse<Triple>::New('h')
@@ -154,42 +158,30 @@ int main(int argc, char ** args) {
             Parse<Triple>::New(std::string("world"))
             ;
 
-        final = (
+        PrintTest(
             parse_hello
           * Parse<Triple>::New(' ')
           * parse_world
-          * ParseEmpty<Triple>::New()
-        )->Get()(
-            Triple {
-                .quotient = "",
-                .remainder = "hello world"
-            }
+          * ParseEmpty<Triple>::New(),
+          "hello world"
         );
-
-        if (!final.success)
-            std::cout << "Fail:\n";
-
-        std::cout
-            << "Quotient  : " << final.quotient << '\n'
-            << "Remainder : " << final.remainder << '\n'
-            ;
 
         auto parse_while_x = While(Parse<Triple>::New('x'));
+        PrintTest(parse_while_x, "xxxxxxxaaaa");
 
-        final = parse_while_x->Get()(
-            Triple {
-                .quotient = "",
-                .remainder = "xxxxxxxaaaa"
-            }
-        );
+        // c is not '0' and c is digit
+        // (c is not '0') and (c is digit)
+        // not not ((c is not '0') and (c is digit))
+        // not (not (c is not '0') or not (c is digit))
 
-        if (!final.success)
-            std::cout << "Fail:\n";
+        auto digit = Parse<Triple>::New((std::function<bool(char)>)isdigit);
+        // auto nonzero_digit = Xor(-Parse<Triple>::New('0'), digit);
 
-        std::cout
-            << "Quotient  : " << final.quotient << '\n'
-            << "Remainder : " << final.remainder << '\n'
-            ;
+        auto integer = (Xor(-Parse<Triple>::New('0'), digit) * While(digit)) + digit;
+        PrintTest(integer, "19991xxxx");
+        PrintTest(integer, "09991xxxx");
+        PrintTest(integer, "00991xxxx");
+        PrintTest(integer, "10000xxxx");
     }
     #endif
 
