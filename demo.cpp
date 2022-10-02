@@ -17,7 +17,7 @@ std::string Tests::WorkingDirectory;
 // #define RUN_TESTS
 
 void PrintTest(std::shared_ptr<AParse<Triple>> p, const std::string & dividend) {
-    auto final = p->Get()(
+    auto final = p->Fn()(
         Triple {
             .quotient = "",
             .remainder = dividend,
@@ -34,7 +34,7 @@ void PrintTest(std::shared_ptr<AParse<Triple>> p, const std::string & dividend) 
 }
 
 void PrintTest(std::shared_ptr<AParse<Integral>> p, const std::string & dividend) {
-    auto final = p->Get()(Integral::New(
+    auto final = p->Fn()(Integral::New(
         Triple {
             .success = true,
             .quotient = "",
@@ -108,16 +108,6 @@ int main(int argc, char ** args) {
 
         auto parse_while_x = While(Parse<Triple>::New('x'));
         PrintTest(parse_while_x, "xxxxxxxaaaa");
-
-        // c is not '0' and c is digit
-        // (c is not '0') and (c is digit)
-        // not not ((c is not '0') and (c is digit))
-        // not (not (c is not '0') or not (c is digit))
-
-/*
-        auto digit = Parse<Triple>::New((std::function<bool(char)>)isdigit);
-        auto integer = (Xor(-Parse<Triple>::New('0'), digit) * While(digit)) + digit;
-*/
 
         auto integer = Parsers::Integer<Integral>();
         PrintTest(integer, "19991xxxx");

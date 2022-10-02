@@ -27,6 +27,13 @@
         "fstream": "cpp",
         "iomanip": "cpp",
         "utility": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp"
     }
 }

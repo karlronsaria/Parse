@@ -45,13 +45,13 @@ public:
         _action(action) {}
 
     virtual functor_t
-    Get() const {
+    Fn() const {
         return _action;
     }
 
     const std::shared_ptr<AParse<T>>
     And(std::shared_ptr<AParse<T>> other) const {
-        auto first = this->Get();
+        auto first = this->Fn();
         auto secnd = other->Get();
 
         return std::make_shared<AParse<T>>(
@@ -68,7 +68,7 @@ public:
 
     const std::shared_ptr<AParse<T>>
     Or(std::shared_ptr<AParse<T>> other) const {
-        auto first = this->Get();
+        auto first = this->Fn();
         auto secnd = other->Get();
 
         return std::make_shared<AParse<T>>(
@@ -85,7 +85,7 @@ public:
 
     const std::shared_ptr<AParse<T>>
     Not() const {
-        auto first = this->Get();
+        auto first = this->Fn();
 
         return std::make_shared<AParse<T>>(
             [=](T result_0) -> T {
@@ -161,7 +161,7 @@ public:
         }) {}
 
     virtual typename AParse<T>::functor_t
-    Get() const override {
+    Fn() const override {
         return _action;
     }
 };
@@ -269,7 +269,7 @@ public:
     }
 
     virtual typename AParse<T>::functor_t
-    Get() const override {
+    Fn() const override {
         return [](T result) -> T {
             return result.Copy(result.remainder.length() == 0);
         };
