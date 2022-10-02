@@ -31,13 +31,61 @@ struct Triple {
         };
     }
 
-    const Triple Copy(bool decision) {
+    const Triple Copy(bool decision) const {
         return Triple {
             .success = decision,
             .quotient = quotient,
             .remainder = remainder,
         };
     }
+
+    bool Success() const {
+        return success;
+    }
+
+    const Triple By(char c) const {
+        return remainder.length() == 0 || remainder[0] != c
+            ? Copy(false)
+            : Triple {
+                .success = true,
+                .quotient = std::string(quotient) + c,
+                .remainder = remainder.substr(
+                    1,
+                    remainder.length() - 1
+                ),
+            };
+    }
+
+    const Triple By(std::string needle) const {
+        auto haystack = remainder;
+
+        if (haystack.length() < needle.length())
+            return !*this;
+
+        auto rem = haystack.substr(0, needle.length());
+
+        if (rem != needle)
+            return !*this;
+
+        auto remainder = haystack.substr(
+            needle.length(),
+            haystack.length() - needle.length()
+        );
+
+        return Triple {
+            .success = true,
+            .quotient = std::string(quotient) + std::string(needle),
+            .remainder = remainder,
+        };
+    }
+
+    const Triple By(const char * needle) const {
+        return By(std::string(needle));
+    }
+
+    const Triple operator/(char divisor) const { return By(divisor); }
+    const Triple operator/(std::string divisor) const { return By(divisor); }
+    const Triple operator/(const char * divisor) const { return By(divisor); }
 };
 
 typedef std::function<Triple(Triple)> functor_t;
@@ -120,57 +168,25 @@ public:
         _action(action) {}
 
     Parse(const char * needle):
-        Parse(std::string(needle)) {}
+        _action([needle](Triple result) -> Triple {
+            return result / needle;
+        }) {}
 
     Parse(std::string needle):
         _action([needle](Triple result) -> Triple {
-            auto haystack = result.remainder;
-
-            if (haystack.length() < needle.length())
-                return !result;
-
-            auto rem = haystack.substr(0, needle.length());
-
-            if (rem != needle)
-                return !result;
-
-            auto remainder = haystack.substr(
-                needle.length(),
-                haystack.length() - needle.length()
-            );
-
-            return Triple {
-                .success = true,
-                .quotient = std::string(result.quotient) + std::string(needle),
-                .remainder = remainder,
-            };
+            return result / needle;
         }) {}
 
     Parse(std::function<bool(char)> condition, char c):
         _action([condition, c](Triple result) -> Triple {
             return condition(c)
                 ? result.Copy(false)
-                : Triple {
-                    .success = true,
-                    .quotient = std::string(result.quotient) + c,
-                    .remainder = result.remainder.substr(
-                        1,
-                        result.remainder.length() - 1
-                    ),
-                };
+                : result / c;
         }) {}
 
     Parse(char c):
         _action([c](Triple result) -> Triple {
-            auto rem = result.remainder;
-
-            return rem.length() == 0 || rem[0] != c
-                ? result.Copy(false)
-                : Triple {
-                    .success = true,
-                    .quotient = std::string(result.quotient) + c,
-                    .remainder = rem.substr(1, rem.length() - 1),
-                };
+            return result / c;
         }) {}
 
     Parse(bool decision):
