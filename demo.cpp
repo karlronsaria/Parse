@@ -16,7 +16,7 @@ std::string Tests::WorkingDirectory;
 
 // #define RUN_TESTS
 
-void PrintTest(std::shared_ptr<AParse<Triple>> p, const std::string & dividend) {
+void PrintTest(std::shared_ptr<AParse<Triple, Triple>> p, const std::string & dividend) {
     auto final = p->Fn()(
         Triple {
             .quotient = "",
@@ -33,7 +33,7 @@ void PrintTest(std::shared_ptr<AParse<Triple>> p, const std::string & dividend) 
         ;
 }
 
-void PrintTest(std::shared_ptr<AParse<Integral>> p, const std::string & dividend) {
+void PrintTest(std::shared_ptr<AParse<Integral, Integral>> p, const std::string & dividend) {
     auto final = p->Fn()(Integral::New(
         Triple {
             .success = true,
@@ -71,10 +71,10 @@ int main(int argc, char ** args) {
     }
     #else
     {
-        auto parse_w = Parse<Triple>::New('w');
-        auto parse_h = Parse<Triple>::New('h');
-        auto parse_a = Parse<Triple>::New('a');
-        auto parse_t = Parse<Triple>::New('t');
+        auto parse_w = Parse<Triple, Triple>::New('w');
+        auto parse_h = Parse<Triple, Triple>::New('h');
+        auto parse_a = Parse<Triple, Triple>::New('a');
+        auto parse_t = Parse<Triple, Triple>::New('t');
         auto parse_empty = ParseEmpty<Triple>::New();
 
         auto parse_what =
@@ -88,25 +88,25 @@ int main(int argc, char ** args) {
         PrintTest(parse_what, "what");
 
         auto parse_hello =
-            Parse<Triple>::New('h')
-          * Parse<Triple>::New('e')
-          * (Pow(Parse<Triple>::New('l'), 2))
-          * Parse<Triple>::New('o')
+            Parse<Triple, Triple>::New('h')
+          * Parse<Triple, Triple>::New('e')
+          * (Pow(Parse<Triple, Triple>::New('l'), 2))
+          * Parse<Triple, Triple>::New('o')
             ;
 
         auto parse_world =
-            Parse<Triple>::New(std::string("world"))
+            Parse<Triple, Triple>::New(std::string("world"))
             ;
 
         PrintTest(
             parse_hello
-          * Parse<Triple>::New(' ')
+          * Parse<Triple, Triple>::New(' ')
           * parse_world
           * ParseEmpty<Triple>::New(),
           "hello world"
         );
 
-        auto parse_while_x = While(Parse<Triple>::New('x'));
+        auto parse_while_x = While(Parse<Triple, Triple>::New('x'));
         PrintTest(parse_while_x, "xxxxxxxaaaa");
 
         auto integer = Parsers::Integer<Integral>();
