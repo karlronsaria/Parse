@@ -79,10 +79,10 @@ int main(int argc, char ** args) {
 
         auto parse_what =
             parse_w
-            ->And(parse_h)
-            ->And(parse_a)
-            ->And(parse_t)
-            ->And(parse_empty)
+            ->Cat(parse_h)
+            ->Cat(parse_a)
+            ->Cat(parse_t)
+            ->Cat(parse_empty)
             ;
 
         PrintTest(parse_what, "what");

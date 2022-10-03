@@ -50,9 +50,9 @@ public:
     }
 
     const std::shared_ptr<AParse<T>>
-    And(std::shared_ptr<AParse<T>> other) const {
+    Cat(std::shared_ptr<AParse<T>> other) const {
         auto first = this->Fn();
-        auto secnd = other->Get();
+        auto secnd = other->Fn();
 
         return std::make_shared<AParse<T>>(
             [=](T result_0) -> T {
@@ -69,7 +69,7 @@ public:
     const std::shared_ptr<AParse<T>>
     Or(std::shared_ptr<AParse<T>> other) const {
         auto first = this->Fn();
-        auto secnd = other->Get();
+        auto secnd = other->Fn();
 
         return std::make_shared<AParse<T>>(
             [=](T result_0) -> T {
@@ -172,7 +172,7 @@ operator*(
     const std::shared_ptr<AParse<T>> first,
     const std::shared_ptr<AParse<T>> secnd
 ) {
-    return first->And(secnd);
+    return first->Cat(secnd);
 }
 
 template <__DIVIDEND__ T>
@@ -216,7 +216,7 @@ Pow(
     auto temp = Parse<T>::New(true);
 
     for (int i = 1; i <= scalar; ++i)
-        temp = temp->And(vector);
+        temp = temp->Cat(vector);
 
     return temp;
 }
@@ -229,7 +229,7 @@ operator-(const std::shared_ptr<AParse<T>> vector) {
 
 template <__DIVIDEND__ T>
 const std::shared_ptr<AParse<T>>
-Xor(
+And(
     const std::shared_ptr<AParse<T>> a,
     const std::shared_ptr<AParse<T>> b
 ) {
@@ -246,14 +246,14 @@ While(
 ) {
     return Parse<T>::New(typename AParse<T>::functor_t(
         [vector](T init) {
-            T next = vector->Get()(init);
+            T next = vector->Fn()(init);
 
             auto nextParse = next.success
                 ? While(vector)
                 : Parse<T>::New(true)
                 ;
 
-            return nextParse->Get()(next);
+            return nextParse->Fn()(next);
         }
     ));
 }

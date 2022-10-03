@@ -188,6 +188,6 @@ namespace Parsers {
     std::shared_ptr<AParse<T>>
     Integer() {
         auto digit = Digit<T>();
-        return (Xor(-Parse<T>::New('0'), digit) * While(digit)) + digit;
+        return (And(-Parse<T>::New('0'), digit) * While(digit)) + digit;
     }
 };
