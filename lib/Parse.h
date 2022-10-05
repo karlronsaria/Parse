@@ -17,13 +17,13 @@ concept StringDivisible = requires (
     T d, bool b, char c, std::string s1, const char * s2,
     std::function<bool(char)> f
 ) {
-    d.Success();
-    d.Copy(b);
-    d.Diff(f);
-    d.operator!();
-    d.operator/(c);
-    d.operator/(s1);
-    d.operator/(s2);
+    b = d.Success();
+    d = d.Copy(b);
+    d = d.Diff(f);
+    d = d.operator!();
+    d = d.operator/(c);
+    d = d.operator/(s1);
+    d = d.operator/(s2);
 };
 
 #define __DIVIDEND__ StringDivisible
@@ -192,20 +192,6 @@ operator-(
     const std::shared_ptr<AParse<T, S>> secnd
 ) {
     return first->Or(secnd->Not());
-}
-
-template <__DIVIDEND__ T, __DIVIDEND__ S>
-const std::shared_ptr<AParse<T, S>>
-operator*(
-    const int scalar,
-    const std::shared_ptr<AParse<T, S>> vector
-) {
-    auto temp = Parse<T, S>::New(true);
-
-    for (int i = 1; i <= scalar; ++i)
-        temp = temp->Or(vector);
-
-    return temp;
 }
 
 template <__DIVIDEND__ T>
