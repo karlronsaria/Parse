@@ -71,10 +71,10 @@ int main(int argc, char ** args) {
     }
     #else
     {
-        auto parse_w = Parse<Triple, Triple>::New('w');
-        auto parse_h = Parse<Triple, Triple>::New('h');
-        auto parse_a = Parse<Triple, Triple>::New('a');
-        auto parse_t = Parse<Triple, Triple>::New('t');
+        auto parse_w = Parse<Triple, Triple>::Char('w');
+        auto parse_h = Parse<Triple, Triple>::Char('h');
+        auto parse_a = Parse<Triple, Triple>::Char('a');
+        auto parse_t = Parse<Triple, Triple>::Char('t');
         auto parse_empty = ParseEmpty<Triple>::New();
 
         auto parse_what =
@@ -88,25 +88,25 @@ int main(int argc, char ** args) {
         PrintTest(parse_what, "what");
 
         auto parse_hello =
-            Parse<Triple, Triple>::New('h')
-          * Parse<Triple, Triple>::New('e')
-          * (Pow(Parse<Triple, Triple>::New('l'), 2))
-          * Parse<Triple, Triple>::New('o')
+            Parse<Triple, Triple>::Char('h')
+          * Parse<Triple, Triple>::Char('e')
+          * (Pow(Parse<Triple, Triple>::Char('l'), 2))
+          * Parse<Triple, Triple>::Char('o')
             ;
 
         auto parse_world =
-            Parse<Triple, Triple>::New(std::string("world"))
+            Parse<Triple, Triple>::String(std::string("world"))
             ;
 
         PrintTest(
             parse_hello
-          * Parse<Triple, Triple>::New(' ')
+          * Parse<Triple, Triple>::Char(' ')
           * parse_world
           * ParseEmpty<Triple>::New(),
           "hello world"
         );
 
-        auto parse_while_x = While(Parse<Triple, Triple>::New('x'));
+        auto parse_while_x = While(Parse<Triple, Triple>::Char('x'));
         PrintTest(parse_while_x, "xxxxxxxaaaa");
 
         auto integer = Parsers::Integer<Integral>();
@@ -116,23 +116,21 @@ int main(int argc, char ** args) {
         PrintTest(integer, "10000xxxx");
 
         auto triple_to_integer =
-            Parse<Triple, Integral>::NewFn(
-                std::function<Integral(Triple)>(
-                    [](Triple t) -> Integral {
-                        std::cout
-                            << "I have received your Triple: ("
-                            << t.success
-                            << ", \""
-                            << t.quotient
-                            << "\", \""
-                            << t.remainder
-                            << "\").\n"
-                            << "Here is an Integral.\n"
-                            ;
+            Parse<Triple, Integral>::Functor(
+                [](Triple t) -> Integral {
+                    std::cout
+                        << "I have received your Triple: ("
+                        << t.success
+                        << ", \""
+                        << t.quotient
+                        << "\", \""
+                        << t.remainder
+                        << "\").\n"
+                        << "Here is an Integral.\n"
+                        ;
 
-                        return Integral::New(t, 125);
-                    }
-                )
+                    return Integral::New(t, 125);
+                }
             );
 
         auto final = triple_to_integer->Fn()(Triple {

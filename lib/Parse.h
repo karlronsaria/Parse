@@ -109,27 +109,27 @@ public:
     virtual ~Parse() = default;
 
     static std::shared_ptr<AParse<T, S>>
-    New(typename AParse<T, S>::functor_t action) {
+    Functor(typename AParse<T, S>::functor_t action) {
         return std::make_shared<Parse<T, S>>(action);
     }
 
     static std::shared_ptr<AParse<T, S>>
-    New(char c) {
+    Char(char c) {
         return std::make_shared<Parse<T, S>>(c);
     }
 
     static std::shared_ptr<AParse<T, S>>
-    New(bool decision) {
+    Decision(bool decision) {
         return std::make_shared<Parse<T, S>>(decision);
     }
 
     static std::shared_ptr<AParse<T, S>>
-    New(std::string str) {
+    String(std::string str) {
         return std::make_shared<Parse<T, S>>(str);
     }
 
     static std::shared_ptr<AParse<T, S>>
-    New(std::function<bool(char)> condition) {
+    Condition(std::function<bool(char)> condition) {
         return std::make_shared<Parse<T, S>>(condition);
     }
 
@@ -200,7 +200,7 @@ Pow(
     const std::shared_ptr<AParse<T, T>> vector,
     const int scalar
 ) {
-    auto temp = Parse<T, T>::New(true);
+    auto temp = Parse<T, T>::Decision(true);
 
     for (int i = 1; i <= scalar; ++i)
         temp = temp->Cat(vector);
@@ -231,18 +231,18 @@ const std::shared_ptr<AParse<T, T>>
 While(
     const std::shared_ptr<AParse<T, T>> vector
 ) {
-    return Parse<T, T>::New(typename AParse<T, T>::functor_t(
+    return Parse<T, T>::Functor(
         [vector](T init) {
             T next = vector->Fn()(init);
 
             auto nextParse = next.success
                 ? While(vector)
-                : Parse<T, T>::New(true)
+                : Parse<T, T>::Decision(true)
                 ;
 
             return nextParse->Fn()(next);
         }
-    ));
+    );
 }
 
 template <__DIVIDEND__ T>

@@ -157,44 +157,44 @@ namespace Parsers {
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Digit() {
-        return Parse<T, T>::New((std::function<bool(char)>)isdigit);
+        return Parse<T, T>::Condition((std::function<bool(char)>)isdigit);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Alpha() {
-        return Parse<T, T>::New((std::function<bool(char)>)isalpha);
+        return Parse<T, T>::Condition((std::function<bool(char)>)isalpha);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Space() {
-        return Parse<T, T>::New((std::function<bool(char)>)isspace);
+        return Parse<T, T>::Condition((std::function<bool(char)>)isspace);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Punct() {
-        return Parse<T, T>::New((std::function<bool(char)>)ispunct);
+        return Parse<T, T>::Condition((std::function<bool(char)>)ispunct);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Lower() {
-        return Parse<T, T>::New((std::function<bool(char)>)islower);
+        return Parse<T, T>::Condition((std::function<bool(char)>)islower);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Integer() {
         auto digit = Digit<T>();
-        return (And(-Parse<T, T>::New('0'), digit) * While(digit)) + digit;
+        return (And(-Parse<T, T>::Char('0'), digit) * While(digit)) + digit;
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Word() {
-        auto word = Parse<T, T>::New('_') + Alpha<T>();
+        auto word = Parse<T, T>::Char('_') + Alpha<T>();
         return word * While<T, T>(word + Digit<T>());
     }
 };
