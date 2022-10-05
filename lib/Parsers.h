@@ -190,4 +190,11 @@ namespace Parsers {
         auto digit = Digit<T>();
         return (And(-Parse<T, T>::New('0'), digit) * While(digit)) + digit;
     }
+
+    template <__DIVIDEND__ T>
+    std::shared_ptr<AParse<T, T>>
+    Word() {
+        auto word = Parse<T, T>::New('_') + Alpha<T>();
+        return word * While<T, T>(word + Digit<T>());
+    }
 };

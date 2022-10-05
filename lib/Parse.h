@@ -34,7 +34,7 @@ concept StringDivisible = requires (
 template <__DIVIDEND__ T, __DIVIDEND__ S>
 class AParse {
 public:
-    typedef std::function<T(S)> functor_t;
+    typedef std::function<S(T)> functor_t;
 private:
     functor_t _action;
 public:

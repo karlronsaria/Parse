@@ -114,6 +114,42 @@ int main(int argc, char ** args) {
         PrintTest(integer, "09991xxxx");
         PrintTest(integer, "00991xxxx");
         PrintTest(integer, "10000xxxx");
+
+        auto triple_to_integer =
+            Parse<Triple, Integral>::NewFn(
+                std::function<Integral(Triple)>(
+                    [](Triple t) -> Integral {
+                        std::cout
+                            << "I have received your Triple: ("
+                            << t.success
+                            << ", \""
+                            << t.quotient
+                            << "\", \""
+                            << t.remainder
+                            << "\").\n"
+                            << "Here is an Integral.\n"
+                            ;
+
+                        return Integral::New(t, 125);
+                    }
+                )
+            );
+
+        auto final = triple_to_integer->Fn()(Triple {
+            .success = true,
+            .quotient = "",
+            .remainder = "Hello, nothing!",
+        });
+
+        if (!final.success)
+            std::cout << "Fail:\n";
+
+        std::cout
+            << "Quotient  : " << final.quotient << '\n'
+            << "Remainder : " << final.remainder << '\n'
+            << "Value     : " << final.value << '\n'
+            << '\n'
+            ;
     }
     #endif
 
