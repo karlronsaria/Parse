@@ -6,6 +6,146 @@
 #include <memory>
 #include <functional>
 
+struct Triple {
+    bool success;
+    std::string quotient;
+    std::string remainder;
+
+    static const Triple
+    New(const Triple other) {
+        return other.Decide(other.Success());
+    }
+
+    bool
+    Success() const {
+        return success;
+    }
+
+    const Triple
+    Decide(bool decision) const {
+        return Triple {
+            .success = decision,
+            .quotient = quotient,
+            .remainder = remainder,
+        };
+    }
+
+    const Triple
+    Diff(std::function<bool(char)> condition) const {
+        return remainder.length() == 0 || !condition(remainder[0])
+            ? Decide(false)
+            : Triple {
+                .success = true,
+                .quotient = std::string(quotient) + remainder[0],
+                .remainder = remainder.substr(
+                    1,
+                    remainder.length() - 1
+                ),
+            };
+    }
+
+    const Triple
+    operator/(char divisor) const {
+        return remainder.length() == 0 || remainder[0] != divisor
+            ? Decide(false)
+            : Triple {
+                .success = true,
+                .quotient = std::string(quotient) + divisor,
+                .remainder = remainder.substr(
+                    1,
+                    remainder.length() - 1
+                ),
+            };
+    }
+
+    const Triple
+    operator/(const std::string & divisor) const {
+        auto dividend = remainder;
+
+        bool fail = (dividend.length() < divisor.length())
+            || (dividend.substr(0, divisor.length()) != divisor);
+
+        if (fail)
+            return this->Decide(false);
+
+        auto remainder = dividend.substr(
+            divisor.length(),
+            dividend.length() - divisor.length()
+        );
+
+        return Triple {
+            .success = true,
+            .quotient = std::string(quotient) + std::string(divisor),
+            .remainder = remainder,
+        };
+    }
+
+    const Triple
+    operator/(const char * divisor) const {
+        return (*this)/(std::string(divisor));
+    }
+};
+
+template <typename T>
+struct Dividend: public Triple {
+public:
+    T value;
+
+    static Dividend<T>
+    New(Triple base, T value) {
+        Dividend<T> temp;
+        temp.success = base.success;
+        temp.quotient = base.quotient;
+        temp.remainder = base.remainder;
+        temp.value = value;
+        return temp;
+    }
+
+    static Dividend<T>
+    New(Triple base) {
+        return New(base, 0);
+    }
+
+    const Triple
+    Triple() const {
+        return ::Triple {
+            .success = success,
+            .quotient = quotient,
+            .remainder = remainder,
+        };
+    }
+
+    bool
+    Success() const {
+        return Triple::Success();
+    }
+
+    const Dividend<T>
+    Decide(bool decision) const {
+        return New(Triple::Decide(decision), value);
+    }
+
+    const Dividend<T>
+    Diff(std::function<bool(char)> condition) const {
+        return New(Triple::Diff(condition), value);
+    }
+
+    const Dividend<T>
+    operator/(char divisor) const {
+        return New(Triple::operator/(divisor), value);
+    }
+
+    const Dividend<T>
+    operator/(const std::string & divisor) const {
+        return New(Triple::operator/(divisor), value);
+    }
+
+    const Dividend<T>
+    operator/(const char * divisor) const {
+        return *this / std::string(divisor);
+    }
+};
+
 #ifdef __DIVIDEND__
 #undef __DIVIDEND__
 #endif
@@ -18,9 +158,8 @@ concept StringDivisible = requires (
     std::function<bool(char)> f
 ) {
     b = d.Success();
-    d = d.Copy(b);
+    d = d.Decide(b);
     d = d.Diff(f);
-    d = d.operator!();
     d = d.operator/(c);
     d = d.operator/(s1);
     d = d.operator/(s2);
@@ -49,24 +188,6 @@ public:
         return _action;
     }
 
-    template <__DIVIDEND__ R>
-    const std::shared_ptr<AParse<T, R>>
-    Cat(std::shared_ptr<AParse<S, R>> other) const {
-        auto first = this->Fn();
-        auto secnd = other->Fn();
-
-        return std::make_shared<AParse<T, R>>(
-            [=](T result_0) -> R {
-                S result_1 = first(result_0);
-
-                return !result_1.success
-                    ? result_1
-                    : secnd(result_1)
-                    ;
-            }
-        );
-    }
-
     const std::shared_ptr<AParse<T, S>>
     Or(std::shared_ptr<AParse<T, S>> other) const {
         auto first = this->Fn();
@@ -76,7 +197,7 @@ public:
             [=](T result_0) -> S {
                 S result_1 = first(result_0);
 
-                return result_1.success
+                return result_1.Success()
                     ? result_1
                     : secnd(result_0)
                     ;
@@ -90,7 +211,8 @@ public:
 
         return std::make_shared<AParse<T, S>>(
             [=](T result_0) -> S {
-                return !first(result_0);
+                S temp = first(result_0);
+                return temp.Decide(!temp.Success());
             }
         );
     }
@@ -100,6 +222,48 @@ public:
         return Not();
     }
 };
+
+template <__DIVIDEND__ T, __DIVIDEND__ S, __DIVIDEND__ R>
+const std::shared_ptr<AParse<T, R>>
+Cat(
+    std::shared_ptr<AParse<T, S>> first,
+    std::shared_ptr<AParse<S, R>> secnd
+) {
+    auto f1 = first->Fn();
+    auto f2 = secnd->Fn();
+
+    return std::make_shared<AParse<T, R>>(
+        [=](T result_0) -> R {
+            S result_1 = f1(result_0);
+
+            return !result_1.Success()
+                ? R::New(result_1.Triple()) // note: SFINAE
+                : f2(result_1)
+                ;
+        }
+    );
+}
+
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParse<T, T>>
+Cat(
+    std::shared_ptr<AParse<T, T>> first,
+    std::shared_ptr<AParse<T, T>> secnd
+) {
+    auto f1 = first->Fn();
+    auto f2 = secnd->Fn();
+
+    return std::make_shared<AParse<T, T>>(
+        [=](T result_0) -> T {
+            T result_1 = f1(result_0);
+
+            return !result_1.Success()
+                ? result_1 // note: SFINAE
+                : f2(result_1)
+                ;
+        }
+    );
+}
 
 template <__DIVIDEND__ T, __DIVIDEND__ S>
 class Parse: public AParse<T, S> {
@@ -158,7 +322,7 @@ public:
 
     Parse(bool decision):
         _action([decision](T result) -> S {
-            return result.Copy(decision);
+            return result.Decide(decision);
         }) {}
 
     virtual typename AParse<T, S>::functor_t
@@ -170,10 +334,19 @@ public:
 template <__DIVIDEND__ T, __DIVIDEND__ S, __DIVIDEND__ R>
 const std::shared_ptr<AParse<T, R>>
 operator*(
-    const std::shared_ptr<AParse<T, S>> first,
-    const std::shared_ptr<AParse<S, R>> secnd
+    std::shared_ptr<AParse<T, S>> first,
+    std::shared_ptr<AParse<S, R>> secnd
 ) {
-    return first->Cat(secnd);
+    return Cat<T, S, R>(first, secnd);
+}
+
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParse<T, T>>
+operator*(
+    std::shared_ptr<AParse<T, T>> first,
+    std::shared_ptr<AParse<T, T>> secnd
+) {
+    return Cat<T>(first, secnd);
 }
 
 template <__DIVIDEND__ T, __DIVIDEND__ S>
@@ -203,7 +376,7 @@ Pow(
     auto temp = Parse<T, T>::Decision(true);
 
     for (int i = 1; i <= scalar; ++i)
-        temp = temp->Cat(vector);
+        temp = temp * vector;
 
     return temp;
 }
@@ -235,7 +408,7 @@ While(
         [vector](T init) {
             T next = vector->Fn()(init);
 
-            auto nextParse = next.success
+            auto nextParse = next.Success()
                 ? While(vector)
                 : Parse<T, T>::Decision(true)
                 ;
@@ -258,7 +431,7 @@ public:
     virtual typename AParse<T, T>::functor_t
     Fn() const override {
         return [](T result) -> T {
-            return result.Copy(result.remainder.length() == 0);
+            return result.Decide(result.remainder.length() == 0);
         };
     }
 };

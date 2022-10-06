@@ -79,10 +79,10 @@ int main(int argc, char ** args) {
 
         auto parse_what =
             parse_w
-            ->Cat(parse_h)
-            ->Cat(parse_a)
-            ->Cat(parse_t)
-            ->Cat(parse_empty)
+            * parse_h
+            * parse_a
+            * parse_t
+            * parse_empty
             ;
 
         PrintTest(parse_what, "what");
@@ -133,11 +133,13 @@ int main(int argc, char ** args) {
                 }
             );
 
-        auto final = triple_to_integer->Fn()(Triple {
-            .success = true,
-            .quotient = "",
-            .remainder = "Hello, nothing!",
-        });
+        auto final = triple_to_integer->Fn()(
+            Triple {
+                .success = true,
+                .quotient = "",
+                .remainder = "Hello, nothing!",
+            }
+        );
 
         if (!final.success)
             std::cout << "Fail:\n";
@@ -148,6 +150,70 @@ int main(int argc, char ** args) {
             << "Value     : " << final.value << '\n'
             << '\n'
             ;
+
+
+
+
+
+
+
+        auto what = Triple {
+            .success = true,
+            .quotient = "",
+            .remainder = "1.2468",
+        };
+
+        Integral i1 = Integral::New(what, 0);
+        Integral i2 = integer->Fn()(i1);
+
+        auto has_point =
+            Parse<Integral, Integral>::Functor(
+                [](Integral i) -> Integral {
+                    return Integral::New(
+                        Parse<Triple, Triple>::Char('.')->Fn()(i),
+                        i.value
+                    );
+                }
+            );
+
+        auto has_tail =
+            Parse<Integral, Dividend<float>>::Functor(
+                [](Integral i) -> Dividend<float> {
+                    Integral i2 = Parsers::Integer<Integral>()->Fn()(
+                        Integral::New(i.Triple(), 0)
+                    );
+
+                    float f1 = Converts::ToFloat(i.value, i2.value);
+                    return Dividend<float>::New(i2.Triple(), f1);
+                }
+            );
+
+        if (i2.Success()) {
+            /*
+            Triple t1 = i2.Triple();
+            int v1 = i2.value;
+
+            Triple t2 = Parse<Triple, Triple>::Char('.')->Fn()(t1);
+            */
+
+            // Integral i3 = has_point->Fn()(i2);
+
+            Dividend<float> f1 = (has_point * has_tail)->Fn()(i2);
+            std::cout << f1.value << '\n';
+
+            /*
+            if (i3.Success()) {
+                // Integral i3 = Integral::New(t2, 0);
+                Integral i4 = integer->Fn()(Integral::New(i3.Triple(), 0));
+
+                float f1 = Converts::ToFloat(i3.value, i4.value);
+
+                std::cout << f1 << '\n';
+
+                // Dividend<float>::New(i4.Triple(), Converts::ToFloat(v1, i4.value));
+            }
+            */
+        }
     }
     #endif
 
