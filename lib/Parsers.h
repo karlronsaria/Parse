@@ -73,21 +73,6 @@ public:
     }
 };
 
-struct FloatingPoint: public Triple {
-public:
-    float value;
-
-    static FloatingPoint
-    New(Triple base, int head, int tail) {
-        FloatingPoint temp;
-        temp.success = base.success;
-        temp.quotient = base.quotient;
-        temp.remainder = base.remainder;
-        temp.value = Converts::ToFloat(head, tail);
-        return temp;
-    }
-};
-
 namespace Parsers {
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
