@@ -109,11 +109,11 @@ int main(int argc, char ** args) {
         auto parse_while_x = Some(Parse<Triple, Triple>::Char('x'));
         PrintTest(parse_while_x, "xxxxxxxaaaa");
 
-        auto integer = Parsers::Natural<Integral>();
-        PrintTest(integer, "19991xxxx");
-        PrintTest(integer, "09991xxxx");
-        PrintTest(integer, "00991xxxx");
-        PrintTest(integer, "10000xxxx");
+        auto natural = Parsers::Natural<Integral>();
+        PrintTest(natural, "19991xxxx");
+        PrintTest(natural, "09991xxxx");
+        PrintTest(natural, "00991xxxx");
+        PrintTest(natural, "10000xxxx");
 
         auto triple_to_integer =
             Parse<Triple, Integral>::Functor(
@@ -151,69 +151,13 @@ int main(int argc, char ** args) {
             << '\n'
             ;
 
-
-
-
-
-
-
         auto what = Triple {
             .success = true,
             .quotient = "",
             .remainder = "1.2468",
         };
 
-        Integral i1 = Integral::New(what, 0);
-        Integral i2 = integer->Fn()(i1);
-
-        auto has_point =
-            Parse<Integral, Integral>::Functor(
-                [](Integral i) -> Integral {
-                    return Integral::New(
-                        Parse<Triple, Triple>::Char('.')->Fn()(i),
-                        i.value
-                    );
-                }
-            );
-
-        auto has_tail =
-            Parse<Integral, Dividend<float>>::Functor(
-                [](Integral i) -> Dividend<float> {
-                    Integral i2 = Parsers::Natural<Integral>()->Fn()(
-                        Integral::New(i.Triple(), 0)
-                    );
-
-                    float f1 = Converts::ToFloat(i.value, i2.value);
-                    return Dividend<float>::New(i2.Triple(), f1);
-                }
-            );
-
-        if (i2.Success()) {
-            /*
-            Triple t1 = i2.Triple();
-            int v1 = i2.value;
-
-            Triple t2 = Parse<Triple, Triple>::Char('.')->Fn()(t1);
-            */
-
-            // Integral i3 = has_point->Fn()(i2);
-
-            Dividend<float> f1 = (has_point * has_tail)->Fn()(i2);
-            std::cout << f1.value << '\n';
-
-            /*
-            if (i3.Success()) {
-                // Integral i3 = Integral::New(t2, 0);
-                Integral i4 = integer->Fn()(Integral::New(i3.Triple(), 0));
-
-                float f1 = Converts::ToFloat(i3.value, i4.value);
-
-                std::cout << f1 << '\n';
-
-                // Dividend<float>::New(i4.Triple(), Converts::ToFloat(v1, i4.value));
-            }
-            */
-        }
+        std::cout << (natural * Parsers::Float())->Fn()(Integral::New(what, 0)).value << '\n';
     }
     #endif
 

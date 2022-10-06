@@ -132,4 +132,31 @@ namespace Parsers {
         auto word = Parse<T, T>::Char('_') + Alpha<T>();
         return word * Some<T, T>(word + Digit<T>());
     }
+
+    std::shared_ptr<AParse<Integral, Dividend<float>>>
+    Float() {
+        auto has_point =
+            Parse<Integral, Integral>::Functor(
+                [](Integral i) -> Integral {
+                    return Integral::New(
+                        Parse<Triple, Triple>::Char('.')->Fn()(i),
+                        i.value
+                    );
+                }
+            );
+
+        auto has_tail =
+            Parse<Integral, Dividend<float>>::Functor(
+                [](Integral i) -> Dividend<float> {
+                    Integral i2 = Parsers::Natural<Integral>()->Fn()(
+                        Integral::New(i.Triple(), 0)
+                    );
+
+                    float f1 = Converts::ToFloat(i.value, i2.value);
+                    return Dividend<float>::New(i2.Triple(), f1);
+                }
+            );
+
+        return has_point * has_tail;
+    }
 };
