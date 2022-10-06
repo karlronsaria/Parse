@@ -92,44 +92,44 @@ namespace Parsers {
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Digit() {
-        return Parse<T, T>::Condition(isdigit);
+        return Parse<T, T>::Satisfy(isdigit);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Alpha() {
-        return Parse<T, T>::Condition(isalpha);
+        return Parse<T, T>::Satisfy(isalpha);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Space() {
-        return Parse<T, T>::Condition(isspace);
+        return Parse<T, T>::Satisfy(isspace);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Punct() {
-        return Parse<T, T>::Condition(ispunct);
+        return Parse<T, T>::Satisfy(ispunct);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Lower() {
-        return Parse<T, T>::Condition(islower);
+        return Parse<T, T>::Satisfy(islower);
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
-    Integer() {
+    Natural() {
         auto digit = Digit<T>();
-        return (And(-Parse<T, T>::Char('0'), digit) * While(digit)) + digit;
+        return (And(-Parse<T, T>::Char('0'), digit) * Some(digit)) + digit;
     }
 
     template <__DIVIDEND__ T>
     std::shared_ptr<AParse<T, T>>
     Word() {
         auto word = Parse<T, T>::Char('_') + Alpha<T>();
-        return word * While<T, T>(word + Digit<T>());
+        return word * Some<T, T>(word + Digit<T>());
     }
 };

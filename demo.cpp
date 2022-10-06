@@ -106,10 +106,10 @@ int main(int argc, char ** args) {
           "hello world"
         );
 
-        auto parse_while_x = While(Parse<Triple, Triple>::Char('x'));
+        auto parse_while_x = Some(Parse<Triple, Triple>::Char('x'));
         PrintTest(parse_while_x, "xxxxxxxaaaa");
 
-        auto integer = Parsers::Integer<Integral>();
+        auto integer = Parsers::Natural<Integral>();
         PrintTest(integer, "19991xxxx");
         PrintTest(integer, "09991xxxx");
         PrintTest(integer, "00991xxxx");
@@ -179,7 +179,7 @@ int main(int argc, char ** args) {
         auto has_tail =
             Parse<Integral, Dividend<float>>::Functor(
                 [](Integral i) -> Dividend<float> {
-                    Integral i2 = Parsers::Integer<Integral>()->Fn()(
+                    Integral i2 = Parsers::Natural<Integral>()->Fn()(
                         Integral::New(i.Triple(), 0)
                     );
 

@@ -293,7 +293,7 @@ public:
     }
 
     static std::shared_ptr<AParse<T, S>>
-    Condition(std::function<bool(char)> condition) {
+    Satisfy(std::function<bool(char)> condition) {
         return std::make_shared<Parse<T, S>>(condition);
     }
 
@@ -401,7 +401,7 @@ And(
 
 template <__DIVIDEND__ T>
 const std::shared_ptr<AParse<T, T>>
-While(
+Some(
     const std::shared_ptr<AParse<T, T>> vector
 ) {
     return Parse<T, T>::Functor(
@@ -409,13 +409,21 @@ While(
             T next = vector->Fn()(init);
 
             auto nextParse = next.Success()
-                ? While(vector)
+                ? Some(vector)
                 : Parse<T, T>::Decision(true)
                 ;
 
             return nextParse->Fn()(next);
         }
     );
+}
+
+template <__DIVIDEND__ T>
+const std::shared_ptr<AParse<T, T>>
+Many(
+    const std::shared_ptr<AParse<T, T>> vector
+) {
+    return vector * Some(vector);
 }
 
 template <__DIVIDEND__ T>
