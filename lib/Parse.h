@@ -6,6 +6,11 @@
 #include <memory>
 #include <functional>
 
+#ifdef lambda
+#undef lambda
+#endif
+#define lambda(a, b) [](auto a) -> auto { return b; }
+
 struct Triple {
     bool success;
     std::string quotient;
@@ -14,6 +19,11 @@ struct Triple {
     static const Triple
     New(const Triple other) {
         return other.Decide(other.Success());
+    }
+
+    const Triple
+    GetTriple() const {
+        return *this;
     }
 
     bool
@@ -28,6 +38,20 @@ struct Triple {
             .quotient = quotient,
             .remainder = remainder,
         };
+    }
+
+    const Triple
+    Diff() const {
+        return remainder.length() == 0
+            ? Decide(false)
+            : Triple {
+                .success = true,
+                .quotient = std::string(quotient) + remainder[0],
+                .remainder = remainder.substr(
+                    1,
+                    remainder.length() - 1
+                ),
+            };
     }
 
     const Triple
@@ -107,7 +131,7 @@ public:
     }
 
     const Triple
-    Triple() const {
+    GetTriple() const {
         return ::Triple {
             .success = success,
             .quotient = quotient,
@@ -123,6 +147,11 @@ public:
     const Dividend<T>
     Decide(bool decision) const {
         return New(Triple::Decide(decision), value);
+    }
+
+    const Dividend<T>
+    Diff() const {
+        return New(Triple::Diff(), value);
     }
 
     const Dividend<T>
@@ -160,9 +189,11 @@ concept StringDivisible = requires (
     b = d.Success();
     d = d.Decide(b);
     d = d.Diff(f);
+    d = d.Diff();
     d = d.operator/(c);
     d = d.operator/(s1);
     d = d.operator/(s2);
+    d = T::New(d.GetTriple());
 };
 
 #define __DIVIDEND__ StringDivisible
@@ -208,7 +239,7 @@ public:
     const std::shared_ptr<AParse<T, S>>
     Not() const {
         auto first = this->Fn();
-
+        
         return std::make_shared<AParse<T, S>>(
             [=](T result_0) -> S {
                 S temp = first(result_0);
@@ -237,7 +268,7 @@ Cat(
             S result_1 = f1(result_0);
 
             return !result_1.Success()
-                ? R::New(result_1.Triple()) // note: SFINAE
+                ? R::New(result_1.GetTriple()) // note: SFINAE
                 : f2(result_1)
                 ;
         }
@@ -297,6 +328,11 @@ public:
         return std::make_shared<Parse<T, S>>(condition);
     }
 
+    static std::shared_ptr<AParse<T, S>>
+    Any() {
+        return std::make_shared<Parse<T, S>>();
+    }
+
     Parse(typename AParse<T, S>::functor_t action):
         _action(action) {}
 
@@ -323,6 +359,11 @@ public:
     Parse(bool decision):
         _action([decision](T result) -> S {
             return result.Decide(decision);
+        }) {}
+
+    Parse():
+        _action([](T result) -> S {
+            return result.Diff();
         }) {}
 
     virtual typename AParse<T, S>::functor_t

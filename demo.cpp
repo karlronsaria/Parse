@@ -158,6 +158,18 @@ int main(int argc, char ** args) {
         };
 
         std::cout << (natural * Parsers::Float())->Fn()(Integral::New(what, 0)).value << '\n';
+
+        what = Triple {
+            .success = true,
+            .quotient = "asdf",
+            .remainder = "\"Hello, world!\\nHello, life!\\n\\t Kbye!\""
+        };
+
+        std::cout
+            << "Quotient:  ["
+            << Parsers::String()->Fn()(what).quotient
+            << "]\n"
+            ;
     }
     #endif
 
