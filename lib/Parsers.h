@@ -174,28 +174,19 @@ namespace Parsers {
                     ;
 
                 auto what_01 = delim->Fn()(what);
-                
+
                 if (!what_01.Success())
                     return what_01;
 
-                auto what_02 = Triple {
-                    .success = true,
-                    .quotient = "",
-                    .remainder = what_01.remainder,
-                };
+                auto what_02 = what_01.Discard("");
 
                 auto what_03 =
                     Some((escape * any) + notDelim)
                     ->Fn()(what_02)
                     ;
 
-                auto what_04 = delim->Fn()(what_03);
-
-                return Triple {
-                    .success = what_04.success,
-                    .quotient = what_03.quotient,
-                    .remainder = what_04.remainder,
-                };
+                return delim->Fn()(what_03)
+                    .Discard(what_03.quotient);
             }
         );
     }

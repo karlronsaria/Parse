@@ -41,6 +41,15 @@ struct Triple {
     }
 
     const Triple
+    Discard(const std::string & quotient) const {
+        return Triple {
+            .success = this.success,
+            .quotient = quotient,
+            .remainder = this.remainder,
+        }
+    }
+
+    const Triple
     Diff() const {
         return remainder.length() == 0
             ? Decide(false)
